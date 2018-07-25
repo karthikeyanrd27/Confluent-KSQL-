@@ -1,0 +1,8 @@
+Producer : 
+
+bin/kafka-avro-console-producer \
+         --broker-list localhost:9092 --topic tes1t \
+         --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"name1","type":"string"},{"name":"location","type":"string"}]}'
+         
+ 2. Consumer : 
+  bin/kafka-avro-console-consumer --topic  tes1t          --zookeeper localhost:2181          --from-beginning
