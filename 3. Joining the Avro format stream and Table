@@ -1,0 +1,111 @@
+KSQL does not support Avro keys as joining Key . We can actually use KSQL to rekey the topic, using PARTITION BY ID:
+
+Confluent Platform 4.0
+ksql 0.5
+Start ksqlserver, start ksql
+
+Create people topic implicitly and add a message:
+
+kafka-avro-console-producer --topic people --broker-list localhost:9092 \
+ --property parse.key=true \
+ --property schema.registry.url=http://localhost:8081 \
+ --property key.schema='{"type": "string"}' \
+ --property value.schema='{"type":"record", "name":"person", "fields": [{"name":"id","type":"long"}, {"name":"name","type":"string"}]}' 
+enter a value -- note it is a tab character between the key ("1") and the rest of the message
+
+"1"     {"id":1,"name":"jomoore"}
+Create achivement topic and add a message:
+
+kafka-avro-console-producer --topic achievement --broker-list localhost:9092 \
+                    --property parse.key=true \
+                    --property schema.registry.url=http://localhost:8081 \
+                    --property key.schema='{"type": "string"}' \
+                    --property value.schema='{"type":"record", "name":"achievement", "fields": [{"name":"person","type":"long"}, {"name":"achievement","type":"string"}]}'
+enter a value -- note it is a tab character between the key ("1") and the rest of the message
+
+"1"     {"person":1,"achievement":"get ksql working"}
+KSQL - define objects and inspect:
+
+ksql> CREATE TABLE people WITH (KEY='id', VALUE_FORMAT='AVRO', KAFKA_TOPIC='people');
+
+ Message
+---------------
+ Table created
+---------------
+ksql> CREATE STREAM achievement WITH (VALUE_FORMAT='AVRO', KAFKA_TOPIC='achievement');
+
+ Message
+----------------
+ Stream created
+----------------
+ksql> SET 'auto.offset.reset' = 'earliest';
+Successfully changed local property 'auto.offset.reset' from 'null' to 'earliest'
+ksql> select * from people;
+1520539587493 | 1 | 1 | jomoore
+^CQuery terminated
+ksql> select * from achievement;
+1520539711706 | 1 | 1 | get ksql working
+^CQuery terminated    
+
+ksql> describe people;
+
+ Field   | Type
+-------------------------------------
+ ROWTIME | BIGINT           (system)
+ ROWKEY  | VARCHAR(STRING)  (system)
+ ID      | BIGINT
+ NAME    | VARCHAR(STRING)
+-------------------------------------
+For runtime statistics and query details run: DESCRIBE EXTENDED <Stream,Table>;
+ksql> describe achievement;
+
+ Field       | Type
+-----------------------------------------
+ ROWTIME     | BIGINT           (system)
+ ROWKEY      | VARCHAR(STRING)  (system)
+ PERSON      | BIGINT
+ ACHIEVEMENT | VARCHAR(STRING)
+-----------------------------------------    
+Try to join:
+
+ksql> SELECT * FROM achievement a LEFT JOIN people p ON a.person = p.id;
+1520539711706 | 1 | 1 | get ksql working | null | null | null | null    
+Note the null fields where it should be values from person TABLE
+
+Validate that the data exists on the matching key:
+
+ksql> select * from achievement where person=1;
+1520539711706 | 1 | 1 | get ksql working
+
+ksql> select * from people where id=1;
+1520539875001 | 1 | 1 | jomoore
+The problem is that KSQL does not support Avro keys. We can actually use KSQL to rekey the topic, using PARTITION BY ID:
+
+ksql> CREATE STREAM PEOPLE_RAW WITH (KAFKA_TOPIC='people',VALUE_FORMAT='AVRO');
+
+ Message
+----------------
+ Stream created
+----------------
+ksql> SELECT * FROM PEOPLE_RAW;
+1520539875001 | 1 | 1 | jomoore
+^CQuery terminated
+ksql> CREATE STREAM PEOPLE_RAW_REKEY AS SELECT * FROM PEOPLE_RAW PARTITION BY ID;
+
+ Message
+----------------------------
+ Stream created and running
+----------------------------
+ksql> CREATE TABLE people_rekeyed WITH (KEY='id', VALUE_FORMAT='AVRO', KAFKA_TOPIC='PEOPLE_RAW_REKEY');
+
+ Message
+---------------
+ Table created
+---------------
+Now let's test the join again…
+
+ksql> select * from people_rekeyed;
+1520539875001 | 1 | 1 | jomoore
+^CQuery terminated
+ksql> SELECT a.person,p.name FROM achievement a LEFT JOIN people_rekeyed p ON a.person = p.id;
+1 | jomoore
