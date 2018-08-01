@@ -1,6 +1,6 @@
- curl --noproxy '*' localhost:8081/subject
+ curl --noproxy '*' localhost:8081/subjects
  
-  curl --noproxy '*' http://ushapld00119la:8081/subject
+  curl --noproxy '*' http://ushapld00119la:8081/subjects
   
   curl --noproxy '*' http://ushapld00119la:8081/subjects/NBC_APPS.TBL_MS_PLAN_UNIT_LA-value/versions/1
  
