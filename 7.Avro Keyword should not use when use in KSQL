@@ -1,0 +1,50 @@
+bin/kafka-avro-console-producer --topic people6 --broker-list localhost:9092 \
+ --property parse.key=true \
+ --property key.separator=: \
+ --property schema.registry.url=http://localhost:8081 \
+ --property key.schema='{"type": "string"}' \
+ --property value.schema='{"type":"record", "name":"person", "fields": [{"name":"table","type":"string"}, {"name":"op_type","type":"string"},{"name":"op_ts","type":"string"},{"name":"current_ts","type":"string"},{"name":"pos","type":"string"},{"name":"ADVERTISER_ID","type":"int"},{"name":"ADVERTISER_NAME","type":"string"},{"name":"ADVERTISER_CREATION_DT","type":"string"},{"name":"ADVERTISER_MODIFICATION_DT","type":"string"},{"name":"CREATE_DATE","type":"string"},{"name":"ACCOUNTING_IDENT","type":"string"}]}' 
+
+"15719":{"table": "NBC_APPS.TBL_MS_ADVERTISER", "op_type": "U", "op_ts": "2018-07-18 18:51:34.000000", "current_ts": "2018-07-18 14:51:39.397000", "pos": "00000003470236836100", "ADVERTISER_ID": 15719, "ADVERTISER_NAME": "Del Monte Foods", "ADVERTISER_CREATION_DT": "2010-11-18:00:00:00", "ADVERTISER_MODIFICATION_DT": "2018-01-29:00:00:00", "CREATE_DATE": "2018-07-02:10:52:15", "ACCOUNTING_IDENT": "0017000000NoYWVAA3"}  
+
+
+ksql> CREATE STREAM plan WITH (VALUE_FORMAT='AVRO', KAFKA_TOPIC='people6');
+io.confluent.ksql.parser.exception.ParseFailedException: line 2:2: extraneous input 'TABLE' expecting {'ADD', 'APPROXIMATE', 'AT', 'CONFIDENCE', 'NO', 'SUBSTRING', 'POSITION', 'TINYINT', 'SMALLINT', 'INTEGER', 'DATE', 'TIME', 'TIMESTAMP', 'INTERVAL', 'YEAR', 'MONTH', 'DAY', 'HOUR', 'MINUTE', 'SECOND', 'ZONE', 'OVER', 'PARTITION', 'RANGE', 'ROWS', 'PRECEDING', 'FOLLOWING', 'CURRENT', 'ROW', 'VIEW', 'REPLACE', 'GRANT', 'REVOKE', 'PRIVILEGES', 'PUBLIC', 'OPTION', 'EXPLAIN', 'ANALYZE', 'FORMAT', 'TYPE', 'TEXT', 'GRAPHVIZ', 'LOGICAL', 'DISTRIBUTED', 'TRY', 'SHOW', 'TABLES', 'SCHEMAS', 'CATALOGS', 'COLUMNS', 'COLUMN', 'USE', 'PARTITIONS', 'FUNCTIONS', 'TO', 'SYSTEM', 'BERNOULLI', 'POISSONIZED', 'TABLESAMPLE', 'RESCALED', 'ARRAY', 'MAP', 'SET', 'RESET', 'SESSION', 'DATA', 'START', 'TRANSACTION', 'COMMIT', 'ROLLBACK', 'WORK', 'ISOLATION', 'LEVEL', 'SERIALIZABLE', 'REPEATABLE', 'COMMITTED', 'UNCOMMITTED', 'READ', 'WRITE', 'ONLY', 'CALL', 'NFD', 'NFC', 'NFKD', 'NFKC', 'IF', 'NULLIF', 'COALESCE', IDENTIFIER, DIGIT_IDENTIFIER, QUOTED_IDENTIFIER, BACKQUOTED_IDENTIFIER}
+ksql> 
+
+
+bin/kafka-avro-console-producer --topic NBC_APPS.TBL_MS_ADVERTISER --broker-list localhost:9092 \
+ --property parse.key=true \
+ --property key.separator=: \
+ --property schema.registry.url=http://localhost:8081 \
+ --property key.schema='{"type": "string"}' \
+ --property value.schema='{"type":"record", "name":"person", "fields": [{"name":"table1","type":"string"}, {"name":"op_type","type":"string"},{"name":"op_ts","type":"string"},{"name":"current_ts","type":"string"},{"name":"pos","type":"string"},{"name":"ADVERTISER_ID","type":"int"},{"name":"ADVERTISER_NAME","type":"string"},{"name":"ADVERTISER_CREATION_DT","type":"string"},{"name":"ADVERTISER_MODIFICATION_DT","type":"string"},{"name":"CREATE_DATE","type":"string"},{"name":"ACCOUNTING_IDENT","type":"string"}]}' 
+
+"15719":{"table1": "NBC_APPS.TBL_MS_ADVERTISER", "op_type": "U", "op_ts": "2018-07-18 18:51:34.000000", "current_ts": "2018-07-18 14:51:39.397000", "pos": "00000003470236836100", "ADVERTISER_ID": 15719, "ADVERTISER_NAME": "Del Monte Foods", "ADVERTISER_CREATION_DT": "2010-11-18:00:00:00", "ADVERTISER_MODIFICATION_DT": "2018-01-29:00:00:00", "CREATE_DATE": "2018-07-02:10:52:15", "ACCOUNTING_IDENT": "0017000000NoYWVAA3"}  
+
+
+
+bin/kafka-avro-console-producer --topic NBC_APPS.TBL_MS_PLAN_WK --broker-list localhost:9092 \
+ --property parse.key=true \
+ --property key.separator=: \
+ --property schema.registry.url=http://localhost:8081 \
+ --property key.schema='{"type": "string"}' \
+ --property value.schema='{"type":"record", "name":"person", "fields": [{"name":"table","type":"string"}, {"name":"op_type","type":"string"},{"name":"op_ts","type":"string"},{"name":"current_ts","type":"string"},{"name":"pos","type":"string"},{"name":"PLAN_ID","type":"long"},{"name":"PLAN_NAME","type":"string"},{"name":"ORIGINAL_PLAN_ID","type":"long"},{"name":"PORTFOLIO_PLAN_ID","type":["null","long"]},{"name":"STEW_LINK_ID","type":["null","long"]},{"name":"PRG_PLAN_ID","type":["null","string"]},{"name":"REVISION_NO","type":["null","long"]},{"name":"PROPERTY_ID","type":["null","long"]},{"name":"CHANNEL_DIVISION_ID","type":["null","long"]},{"name":"CHANNEL_SUB_DIVISION_ID","type":["null","long"]},
+{"name":"START_DATE","type":["null","string"]},{"name":"END_DATE","type":["null","string"]},{"name":"QUARTER_START","type":["null","string"]},{"name":"QUARTER_END","type":["null","string"]},{"name":"PLAN_CLASS_CODE","type":["null","long"]},{"name":"PLAN_CLASS","type":["null","string"]},{"name":"PLAN_STATUS_CODE","type":["null","long"]},{"name":"PLAN_STATUS","type":["null","string"]},{"name":"PLAN_APPROVAL_STATUS_DESC","type":["null","string"]},{"name":"PRIMARY_DEMO_ID","type":["null","long"]},{"name":"RATING_STREAM_CODE","type":["null","long"]},{"name":"RATING_STREAM","type":["null","string"]},{"name":"MARKETPLACE_CODE","type":["null","long"]},{"name":"ADVERTISER_ID","type":["null","long"]}]}' 
+
+"673337":{"table": "NBC_APPS.TBL_MS_PLAN_WK", "op_type": "U", "op_ts": "2018-07-18 18:51:34.000000", "current_ts": "2018-07-18 14:51:39.397000", "pos": "00000003470236836100","PLAN_ID":673337,"PLAN_NAME":"CBS Big karthikeyan Brother 2Q'18 SC E!","ORIGINAL_PLAN_ID":673337,"PORTFOLIO_PLAN_ID":null,"STEW_LINK_ID":null,"PRG_PLAN_ID":null,"REVISION_NO":null,"PROPERTY_ID":{"long": 10106},"CHANNEL_DIVISION_ID":{"long": 128},"CHANNEL_SUB_DIVISION_ID":{"long": -1},"START_DATE" :{"string": "25-JUN-18"},"END_DATE":{"string": "26-JUN-18"},"QUARTER_START":{"string": "02-APR-18"},"QUARTER_END":{"string":"01-JUL-18"},"PLAN_CLASS_CODE":{"long": 1170001},"PLAN_CLASS":{"string": "National"},"PLAN_STATUS_CODE":{"long": 1336000},"PLAN_STATUS":{"string": "WORKING SPECULATIVE"},"PLAN_APPROVAL_STATUS_DESC": {"string": "WORKING SPECULATIVE"},"PRIMARY_DEMO_ID": {"long": 2476},"RATING_STREAM_CODE": {"long": 1636001},"RATING_STREAM": {"string": "C3"},"MARKETPLACE_CODE": {"long": 1599002},"ADVERTISER_ID" : {"long": 15719} } 
+
+
+CREATE STREAM plan WITH (VALUE_FORMAT='AVRO', KAFKA_TOPIC='people6new');
+
+ksql> CREATE STREAM plan WITH (VALUE_FORMAT='AVRO', KAFKA_TOPIC='people6new');
+
+ Message        
+----------------
+ Stream created 
+----------------
+
+ksql> set 'auto.offset.reset' = 'earliest';
+ksql> select * from plan;
+1533153102569 | Q
+15719 | NBC_APPS.TBL_MS_ADVERTISER | U | 2018-07-18 18:51:34.000000 | 2018-07-18 14:51:39.397000 | 00000003470236836100 | 15719 | Del Monte Foods | 2010-11-18:00:00:00 | 2018-01-29:00:00:00 | 2018-07-02:10:52:15 | 0017000000NoYWVAA3
