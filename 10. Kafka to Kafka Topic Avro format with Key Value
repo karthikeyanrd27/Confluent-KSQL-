@@ -1,0 +1,66 @@
+from pyspark import SparkConf, SparkContext
+from operator import add
+import sys
+from pyspark.streaming import StreamingContext
+from pyspark.streaming.kafka import KafkaUtils
+import json
+from kafka import SimpleProducer, KafkaClient
+from kafka import KafkaProducer
+from pyspark.streaming.kafka import KafkaUtils, OffsetRange, TopicAndPartition
+import abc, six
+import avro.schema
+from confluent_kafka.avro.cached_schema_registry_client import CachedSchemaRegistryClient
+from confluent_kafka.avro.serializer.message_serializer import MessageSerializer
+import pandas as pd
+import io, random
+from avro.io import DatumWriter
+from kafka import (
+    SimpleClient, KeyedProducer,
+    Murmur2Partitioner, RoundRobinPartitioner)
+
+#producer = KafkaProducer(bootstrap_servers='localhost:9092')
+
+# To send messages synchronously
+kafka = KafkaClient('localhost:9092')
+producer = SimpleProducer(kafka)
+#producer = KafkaProducer(bootstrap_servers='localhost:9092')
+
+kafka = SimpleClient('localhost:9092')
+producer = KeyedProducer(kafka)
+
+TOPIC = 'NBC_APPS.TBL_MS_ADVERTISER'
+PARTITION = 0
+topicAndPartition = TopicAndPartition(TOPIC, PARTITION)
+fromOffsets1 = {topicAndPartition:int(PARTITION)}
+
+
+# Path to user.avsc avro schema
+schema_path="/Users/KarthikeyanDurairaj/Desktop/AdvertiserFileschema"
+schema = avro.schema.Parse(open(schema_path).read())
+
+topic1 = 'final'
+
+def handler(message):
+    records = message.collect()
+    for record in records:
+        value_all=record[1]
+        value_key=bytes(record[0],encoding="ascii")
+        print(value_all)
+        writer = avro.io.DatumWriter(schema)
+        bytes_writer = io.BytesIO()
+        encoder = avro.io.BinaryEncoder(bytes_writer)
+        writer.write(value_all,encoder)
+        raw_bytes = bytes_writer.getvalue()
+        producer.send_messages(topic1,value_key,raw_bytes)
+
+
+schema_registry_client = CachedSchemaRegistryClient(url='http://localhost:8081')
+serializer = MessageSerializer(schema_registry_client)
+sc = SparkContext(appName="PythonStreamingAvro")
+ssc = StreamingContext(sc, 10)
+kvs = KafkaUtils.createDirectStream(ssc, ['NBC_APPS.TBL_MS_ADVERTISER'], {"metadata.broker.list": 'localhost:9092'},valueDecoder=serializer.decode_message)
+#kvs.pprint()
+kvs.foreachRDD(handler)
+
+ssc.start()
+ssc.awaitTermination()
