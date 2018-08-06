@@ -1,0 +1,27 @@
+from pyspark import SparkContext, SparkConf
+from pyspark.sql import SQLContext
+from pyspark.context import SparkContext
+from pyspark.sql.session import SparkSession
+from pyspark.streaming import StreamingContext
+from pyspark.sql import SQLContext
+import sys
+
+sc = SparkContext('local')
+ssc = StreamingContext(sc, 10)
+spark = SparkSession(sc)
+sqlContext = SQLContext(sc)
+
+conf = SparkConf()
+conf.setMaster("local[4]")
+conf.setAppName("Spark Cassandra")
+conf.set("spark.cassandra.connection.host","localhost:9042")
+df=spark.read\
+  .format("org.apache.spark.sql.cassandra")\
+  .options(table="amma",keyspace="key1")\
+  .load()
+
+df.write\
+.format("org.apache.spark.sql.cassandra")\
+.mode('append')\
+.options(table="appa", keyspace="key1")\
+.save()
