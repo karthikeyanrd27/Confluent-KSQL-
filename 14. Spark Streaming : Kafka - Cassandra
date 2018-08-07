@@ -1,0 +1,88 @@
+from pyspark import SparkConf, SparkContext
+from operator import add
+import sys
+from pyspark.streaming import StreamingContext
+from pyspark.streaming.kafka import KafkaUtils
+import json
+from kafka import SimpleProducer, KafkaClient
+from kafka import KafkaProducer
+from pyspark.streaming.kafka import KafkaUtils, OffsetRange, TopicAndPartition
+import abc, six
+import avro.schema
+from confluent_kafka.avro.cached_schema_registry_client import CachedSchemaRegistryClient
+from confluent_kafka.avro.serializer.message_serializer import MessageSerializer
+import pandas as pd
+import io, random
+from avro.io import DatumWriter
+from kafka import (
+    SimpleClient, KeyedProducer,
+    Murmur2Partitioner, RoundRobinPartitioner)
+
+import json
+import requests
+import pprint
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
+from pyspark.sql.types import *
+
+
+#producer = KafkaProducer(bootstrap_servers='localhost:9092')
+
+# To send messages synchronously
+kafka = KafkaClient('localhost:9092')
+producer = SimpleProducer(kafka)
+#producer = KafkaProducer(bootstrap_servers='localhost:9092')
+
+kafka = SimpleClient('localhost:9092')
+producer = KeyedProducer(kafka)
+
+TOPIC = 'people'
+PARTITION = 0
+topicAndPartition = TopicAndPartition(TOPIC, PARTITION)
+fromOffsets1 = {topicAndPartition:int(PARTITION)}
+
+
+# Path to user.avsc avro schema
+schema_path="/Users/KarthikeyanDurairaj/Desktop/AdvertiserFileschema"
+schema = avro.schema.Parse(open(schema_path).read())
+
+topic1 = 'TBL_MS_ADVERTISER_COMPACT'
+
+
+def handler(message):
+    records = message.collect()
+    for record in records:
+        value_all=record[1]
+        print(value_all)
+        input = json.dumps(value_all)
+        data1 = "[" +input + "]"
+        data = json.loads(data1)
+        df=ssc.sparkContext.parallelize(data).toDF()
+        s=df.show()
+        conf = SparkConf()
+        conf.setMaster("local[4]")
+        conf.setAppName("Spark Cassandra")
+        conf.set("spark.cassandra.connection.host","localhost:9042")
+
+        df.write\
+          .format("org.apache.spark.sql.cassandra")\
+          .mode('append')\
+          .options(table="mydetails", keyspace="key1")\
+          .save()        
+
+
+ 
+schema_registry_client = CachedSchemaRegistryClient(url='http://localhost:8081')
+serializer = MessageSerializer(schema_registry_client)
+
+sparkSess = SparkSession.builder.appName("My App").getOrCreate()
+sc = sparkSess.sparkContext
+#sc = SparkContext(appName="PythonStreamingAvro")
+ssc = StreamingContext(sc, 10)
+kvs = KafkaUtils.createDirectStream(ssc, ['people'], {"metadata.broker.list": 'localhost:9092'},valueDecoder=serializer.decode_message)
+#kvs.pprint()
+kvs.foreachRDD(handler)
+
+ssc.start()
+ssc.awaitTermination()
