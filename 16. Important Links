@@ -12,3 +12,10 @@ https://stackoverflow.com/questions/50102662/confluent-4-1-0-ksql-stream-table-j
 
 https://github.com/confluentinc/ksql/issues/1557
 
+
+4. Difference between partition key, composite key and clustering key in Cassandra?
+
+https://stackoverflow.com/questions/24949676/difference-between-partition-key-composite-key-and-clustering-key-in-cassandra
+5 Cassandra - JSON 
+https://stackoverflow.com/questions/49660309/connect-cassandra-nosql-db-and-get-the-response-as-json-response/49664042#49664042
+
