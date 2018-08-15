@@ -1,0 +1,4 @@
+cqlsh -u cassdba -p flynnLives -e "DELETE  FROM key1.plan_advertiser
+   where \"PLAN_ID\" = '382633' and \"A_ADVERTISER_ID\" = 15019"
+   
+   
