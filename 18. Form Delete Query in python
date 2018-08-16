@@ -1,0 +1,37 @@
+
+
+def delstring_function(a):
+    b = "\\"+'"' + a +"\\"+ '"'+"="
+    return b
+
+if __name__ == '__main__':
+    a = 'PLAN_ID'
+    b = delstring_function(a)
+    print(b)
+    c = 'A_ADVERTISER_ID'
+    d = delstring_function(c)
+    print(d)
+adv_id = '15019'
+plan_id = '382591'
+cass_cmd1 = 'cqlsh -u cassdba -p flynnLives -e  '
+print(cass_cmd1)
+cass_cmd2 = 'DELETE  FROM  '
+print(cass_cmd2)
+target_tab = 'key1.plan_advertiser'
+print(target_tab)
+whr_cond = ' where '
+whr_and = ' and '
+print(whr_cond)
+print(adv_id)
+print(plan_id)
+cass_cmd3 = cass_cmd2 + target_tab + whr_cond + b+"'%s'" % plan_id  +whr_and +d+adv_id
+cass_cmd4 = '"{}"'.format(cass_cmd3)
+print(cass_cmd4)
+cass_cmd5 = cass_cmd1 +cass_cmd4
+print(cass_cmd5)
+
+Final output : 
+
+cqlsh -u cassdba -p flynnLives -e  "DELETE  FROM  key1.plan_advertiser where \"PLAN_ID\"='382591' and \"A_ADVERTISER_ID\"=15019"
+
+
