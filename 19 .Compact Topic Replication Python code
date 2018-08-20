@@ -1,0 +1,116 @@
+from pyspark import SparkConf, SparkContext
+from operator import add
+import sys
+from kafka import KafkaProducer
+from kafka.errors import KafkaError
+from pyspark.sql import SQLContext, SparkSession
+
+from pyspark.streaming import StreamingContext
+from pyspark.streaming.kafka import KafkaUtils
+import json
+from kafka import SimpleProducer, KafkaClient
+from kafka import KafkaProducer
+from pyspark.streaming.kafka import KafkaUtils, OffsetRange, TopicAndPartition
+import abc, six
+import avro.schema
+from confluent_kafka.avro.cached_schema_registry_client import CachedSchemaRegistryClient
+from confluent_kafka.avro.serializer.message_serializer import MessageSerializer
+import pandas as pd
+import io, random
+from avro.io import DatumWriter
+from kafka import (
+    SimpleClient, KeyedProducer,
+    Murmur2Partitioner, RoundRobinPartitioner)
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
+from pyspark.sql.types import *
+
+
+producer = KafkaProducer(bootstrap_servers='localhost:9092')
+
+
+
+TOPIC = 'NBC_APPS.TBL_MS_ADVERTISER'
+PARTITION = 0
+topicAndPartition = TopicAndPartition(TOPIC, PARTITION)
+fromOffsets1 = {topicAndPartition:int(PARTITION)}
+
+
+# Path to user.avsc avro schema
+schema_path="/Users/KarthikeyanDurairaj/Desktop/AdvertiserFileschema.txt"
+schema = avro.schema.Parse(open(schema_path).read())
+
+topic1 = 'avro'
+
+y = StructType([StructField("table1",StringType(), nullable = True),
+                StructField("op_type",StringType(), nullable = True),
+                StructField("op_ts",StringType(), nullable = True),
+                StructField("current_ts",StringType(), nullable = True),
+                StructField("pos",StringType(), nullable = True),
+                StructField("ADVERTISER_ID",LongType(), nullable = False),
+                StructField("ADVERTISER_NAME",StringType(), nullable = True),
+                StructField("ADVERTISER_CREATION_DT",StringType(), nullable = True),
+                StructField("ADVERTISER_MODIFICATION_DT",StringType(), nullable = True),
+                StructField("CREATE_DATE",StringType(), nullable = True),
+                StructField("ACCOUNTING_IDENT",StringType(), nullable = True)
+                ])
+
+
+def handler(message):
+    records = message.collect()
+    for record in records:
+        value_key =str.encode( record[0])
+        value_al = json.dumps( record[1])
+        value_all= str.encode(value_al)
+        decod_val = (value_all.decode('utf-8'))
+        decod_json = json.loads(decod_val)
+        adv_id = decod_json['ADVERTISER_ID']
+        op_type = decod_json['op_type']
+        print(op_type)
+        print(adv_id)
+        if value_all is not None:
+           if op_type =='U':
+              print ('karthikeyanbanaveenthan')
+              sqlContext = SQLContext(spark)
+              ds = sqlContext \
+                 .read \
+                 .format('org.apache.spark.sql.cassandra') \
+                 .options(table='tbl_plan_advertiser', keyspace='key1') \
+                 .load() \
+                 .filter("ADVERTISER_ID =%d"%adv_id)
+     
+              ds.show()
+              print(record[1])
+              data = [record[1]]
+              df=spark.sparkContext.parallelize(data).toDF(schema = y)   
+              print("this is record dataframe ")
+              df.show()
+
+              inner_join = df.join(ds, df.ADVERTISER_ID == ds.ADVERTISER_ID).select(ds.PLAN_ID,ds.OP_TYPE,ds.ADVERTISER_ID,df.ADVERTISER_NAME,ds.ORIGINAL_PLAN_ID,ds.PLAN_NAME,ds.PORTFOLIO_PLAN_ID,ds.PRG_PLAN_ID,ds.PROPERTY_ID,ds.REVISION_NO,ds.STEW_LINK_ID)
+
+              inner_join.show()
+              if len(df.head(1)) != 0:
+                 inner_join.write\
+                      .format("org.apache.spark.sql.cassandra")\
+                      .mode('append')\
+                      .options(table="tbl_plan_advertiser", keyspace="key1")\
+                      .save() 
+        producer.send('NBC_APPS.TBL_MS_ADVERTISER_COMPACT', key=value_key,value=value_all) 
+        producer.flush() 
+     
+schema_registry_client = CachedSchemaRegistryClient(url='http://localhost:8081')
+serializer = MessageSerializer(schema_registry_client)
+spark = SparkSession.builder \
+  .appName('SparkCassandraApp') \
+  .config('spark.cassandra.connection.host', 'localhost') \
+  .config('spark.cassandra.connection.port', '9042') \
+  .config('spark.cassandra.output.consistency.level','ONE') \
+  .master('local[2]') \
+  .getOrCreate()
+sc = spark.sparkContext
+ssc = StreamingContext(sc, 10)
+kvs = KafkaUtils.createDirectStream(ssc, ['NBC_APPS.TBL_MS_ADVERTISER'], {"metadata.broker.list": 'localhost:9092'},valueDecoder=serializer.decode_message)
+kvs.foreachRDD(handler)
+ssc.start()
+ssc.awaitTermination()
