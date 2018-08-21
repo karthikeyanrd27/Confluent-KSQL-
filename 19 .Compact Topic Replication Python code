@@ -1,3 +1,9 @@
+Executed Command : 
+
+/Users/KarthikeyanDurairaj/Desktop/sparklatest0802/bin/spark-submit --jars /Users/KarthikeyanDurairaj/jarfiles/spark-streaming-kafka-0-8-assembly_2.11-2.3.1.jar --packages datastax:spark-cassandra-connector:2.3.0-s_2.11 topictocassandra.py 
+
+Source Code : 
+
 from pyspark import SparkConf, SparkContext
 from operator import add
 import sys
