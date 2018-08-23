@@ -1,0 +1,7 @@
+How Delete the Topic from Kafka: 
+
+1. Need to be updated the below property in servers.properties: 
+delete.topic.enable=true 
+
+2.  Once update that topic , we have to delete the topic folder from servers.properties:
+sudo ./zookeeper-shell localhost:2181 rmr /brokers/topics/your_topic
