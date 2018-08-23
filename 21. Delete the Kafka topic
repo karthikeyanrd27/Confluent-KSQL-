@@ -5,3 +5,16 @@ delete.topic.enable=true
 
 2.  Once update that topic , we have to delete the topic folder from servers.properties:
 sudo ./zookeeper-shell localhost:2181 rmr /brokers/topics/your_topic
+
+Example : 
+
+[root@ushapld00119lc usr]# bin/kafka-topics --list --zookeeper ushapld00119la:2181/kafka | grep AGENCY
+NBC_APPS.TBL_MS_AGENCY - marked for deletion
+[root@ushapld00119lc usr]# bin/zookeeper-shell ushapld00119la:2181/kafka rmr /brokers/topics/NBC_APPS.TBL_MS_AGENCY
+Connecting to ushapld00119la:2181/kafka
+
+WATCHER::
+
+WatchedEvent state:SyncConnected type:None path:null
+[root@ushapld00119lc usr]# bin/kafka-topics --list --zookeeper ushapld00119la:2181/kafka | grep AGENCY
+[root@ushapld00119lc usr]# 
