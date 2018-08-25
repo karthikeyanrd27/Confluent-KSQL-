@@ -1,0 +1,1 @@
+scp  -P 22 /Users/KarthikeyanDurairaj/compacttopic/devcluster/offset.py openplatform@ashdbld00013.stg-tfayd.com:/tmp
